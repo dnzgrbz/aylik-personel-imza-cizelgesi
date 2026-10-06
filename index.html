@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Aylık Personel İmza Çizelgesi</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 20mm;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            color: #000;
+        }
+        .container {
+            width: 100%;
+            max-width: 790px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 5px 8px;
+        }
+        /* Controls for screen */
+        .no-print {
+            background: #eef2f7;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid #dcdcdc;
+        }
+        .no-print label {
+            font-weight: bold;
+            font-size: 11px;
+            color: #1f4e78;
+        }
+        .no-print select, .no-print input {
+            padding: 3px 5px;
+            font-size: 11px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .print-btn {
+            background: #1f4e78;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: auto;
+            font-size: 11px;
+        }
+        .print-btn:hover {
+            background: #153450;
+        }
+
+        /* Printable Sheet Layout optimized to fill printable A4 page height */
+        .sheet {
+            width: 100%;
+            height: 257mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #fff;
+        }
+
+        .sheet-top {
+            width: 100%;
+        }
+
+        /* Header with Logo */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin-bottom: 0;
+        }
+        .header-table td {
+            border: 1px solid #000;
+            padding: 3px 6px;
+            vertical-align: middle;
+        }
+        .logo-cell {
+            width: 21%;
+            text-align: center;
+            background-color: #fff;
+            cursor: pointer;
+        }
+        .logo-cell img {
+            max-height: 26px;
+            max-width: 75px;
+            display: block;
+            margin: 0 auto;
+        }
+        .logo-placeholder {
+            font-size: 8.5px;
+            color: #666;
+            border: 1px dashed #bbb;
+            padding: 2px;
+            background: #fafafa;
+        }
+        .title-cell {
+            width: 79%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #d9e1f2;
+            letter-spacing: 0.3px;
+        }
+
+        /* Info Table */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            border-top: none;
+            margin-bottom: 0;
+            font-size: 10px;
+        }
+        .info-table td {
+            border: 1px solid #000;
+            padding: 3px 6px;
+        }
+        .info-label {
+            font-weight: bold;
+            font-size: 8.5px;
+            background-color: #f2f2f2;
+        }
+        .editable-cell {
+            width: 100%;
+            border: none;
+            font-size: 10px;
+            outline: none;
+            background: transparent;
+            font-family: Arial, sans-serif;
+        }
+        .editable-cell:focus {
+            background-color: #ffffcc;
+        }
+
+        /* Puantaj Table filling remaining space */
+        .puantaj-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            border-top: none;
+            font-size: 9.5px;
+            flex-grow: 1;
+        }
+        .puantaj-table th, .puantaj-table td {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            text-align: center;
+        }
+        .puantaj-table th {
+            background-color: #fff;
+            color: #000;
+            font-weight: bold;
+            font-size: 10px;
+            height: 24px;
+        }
+        .puantaj-table td {
+            height: auto;
+        }
+        .grid-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            background: transparent;
+            font-size: 9.5px;
+            outline: none;
+            font-family: Arial, sans-serif;
+        }
+        .grid-input:focus {
+            background-color: #ffffcc;
+        }
+
+        /* Bottom Section: Approval - Left aligned, borderless, Excel style with uniform row spacing */
+        .sheet-bottom {
+            width: 100%;
+            margin-top: 4px;
+        }
+        .approval-section {
+            width: 250px;
+            font-size: 9.5px;
+            border-collapse: collapse;
+            float: left;
+        }
+        .approval-section td {
+            border: none;
+            padding: 0px 0px;
+            vertical-align: top;
+            line-height: 1.15;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                background: none;
+            }
+            .container {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            .sheet {
+                height: 257mm;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 20mm;
+            }
+            .editable-cell, .grid-input {
+                background: transparent !important;
+            }
+            input::placeholder {
+                color: transparent !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Controls (Hidden on Print) -->
+    <div class="no-print">
+        <div>
+            <label for="yilInput">Yıl:</label>
+            <input type="number" id="yilInput" value="2026" min="2000" max="2100" style="width: 70px;" oninput="generateTable()" onchange="generateTable()">
+        </div>
+        <div>
+            <label for="aySelect">Ay:</label>
+            <select id="aySelect" onchange="generateTable()">
+                <option value="0">Ocak</option>
+                <option value="1">Şubat</option>
+                <option value="2">Mart</option>
+                <option value="3">Nisan</option>
+                <option value="4">Mayıs</option>
+                <option value="5">Haziran</option>
+                <option value="6" selected>Temmuz</option>
+                <option value="7">Ağustos</option>
+                <option value="8">Eylül</option>
+                <option value="9">Ekim</option>
+                <option value="10">Kasım</option>
+                <option value="11">Aralık</option>
+            </select>
+        </div>
+        <div>
+            <label for="logoInput" style="cursor: pointer; background: #fff; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px; display:inline-block;">Logo Yükle</label>
+            <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="loadLogo(event)">
+        </div>
+        <button class="print-btn" onclick="window.print()">Yazdır / PDF Kaydet</button>
+    </div>
+
+    <!-- Printable Sheet (Full Page Excel-like fit) -->
+    <div class="sheet">
+        <div class="sheet-top">
+            <!-- Header Table with Logo & Title -->
+            <table class="header-table">
+                <tr>
+                    <td class="logo-cell" onclick="document.getElementById('logoInput').click()" title="Logoyu değiştirmek için tıklayın">
+    <div id="logoContainer">
+        <img src="LOGO.png" alt="Logo" style="max-height: 26px; max-width: 75px; display: block; margin: 0 auto;">
+    </div>
+</td>
+                    <td class="title-cell" id="sheetTitleHeader">AYLIK PERSONEL İMZA ÇİZELGESİ</td>
+                </tr>
+            </table>
+            
+            <!-- Info Table -->
+            <table class="info-table">
+                <tr>
+                    <td class="info-label" style="width: 21%; line-height: 1.1; text-align: center;">PERSONEL<br>ADI SOYADI</td>
+                    <td class="info-val" style="width: 29%;"><input type="text" class="editable-cell" id="inputAdSoyad" placeholder="Ad Soyad giriniz..."></td>
+                    <td class="info-label" style="width: 10%; text-align: center;">GÖREV</td>
+                    <td class="info-val" style="width: 40%;"><input type="text" class="editable-cell" id="inputGorev" placeholder="Görev giriniz..."></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Puantaj Table -->
+        <table class="puantaj-table" id="mainPuantajTable">
+            <thead>
+                <tr>
+                    <th style="width: 10%; font-size: 8px;">GÜN</th>
+                    <th style="width: 10%; font-size: 8px;">TARİH</th>
+                    <th style="width: 10%; font-size: 8px;">İŞ BAŞI SAATİ</th>
+                    <th style="width: 10%; font-size: 8px;">İŞ BİTİŞ SAATİ</th>
+                    <th style="width: 10%; font-size: 8px;">ÖĞLE ARASI</th>
+                    <th style="width: 10%; font-size: 8px;">MOLA</th>
+                    <th style="width: 10%; font-size: 8px;">MESAİ BAŞLAMA SAATİ</th>
+                    <th style="width: 10%; font-size: 8px;">MESAİ BİTİŞ SAATİ</th>
+                    <th style="width: 10%; font-size: 8px;">TOPLAM SÜRE</th>
+                    <th style="width: 10%; font-size: 8px;">İMZA</th>
+                </tr>
+            </thead>
+            <tbody id="puantajBody">
+                <!-- Javascript will populate days dynamically -->
+            </tbody>
+        </table>
+
+        <!-- Approval Section at the bottom left, borderless -->
+        <div class="sheet-bottom">
+            <div class="clearfix">
+                <table class="approval-section">
+                    <tr>
+                        <td style="font-weight: bold; padding-bottom: 2px;">ONAY BİRİM AMİRİ</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0; white-space: nowrap;">ADI SOYADI: <input type="text" class="editable-cell" style="display:inline-block; width: 140px; border-bottom: none;" value=""></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0; white-space: nowrap;">UNVAN: <input type="text" class="editable-cell" style="display:inline-block; width: 160px; border-bottom: none;" value=""></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0; white-space: nowrap;">İMZA:</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const gunlerStr = ["PAZAR", "PAZARTESİ", "SALI", "ÇARŞAMBA", "PERŞEMBE", "CUMA", "CUMARTESİ"];
+
+    function loadLogo(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const container = document.getElementById('logoContainer');
+            container.innerHTML = `<img src="${reader.result}" alt="Logo">`;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function generateTable() {
+        let yilVal = document.getElementById('yilInput').value;
+        let yil = parseInt(yilVal);
+        if (isNaN(yil) || yil < 1900) yil = 2026;
+
+        const ay = parseInt(document.getElementById('aySelect').value);
+
+        const totalDays = new Date(yil, ay + 1, 0).getDate();
+        let tbody = document.getElementById('puantajBody');
+        tbody.innerHTML = '';
+
+        for (let day = 1; day <= totalDays; day++) {
+            const dateObj = new Date(yil, ay, day);
+            const gunAdi = gunlerStr[dateObj.getDay()];
+            const dayFormatted = String(day).padStart(2, '0');
+            const monthFormatted = String(ay + 1).padStart(2, '0');
+            const tarihStr = `${dayFormatted}.${monthFormatted}.${yil}`;
+
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight: bold; background-color: #fafafa; width: 10%;">${gunAdi}</td>
+                <td style="background-color: #fafafa; width: 10%;">${tarihStr}</td>
+                <td style="width: 10%;"><input type="text" class="grid-input" placeholder=""></td>
+                <td style="width: 10%;"><input type="text" class="grid-input" placeholder=""></td>
+                <td style="width: 10%;"><input type="text" class="grid-input" placeholder=""></td>
+                <td style="width: 10%;"><input type="text" class="grid-input" placeholder=""></td>
+                <td style="width: 10%;"><input type="text" class="grid-input" placeholder=""></td>
+                <td style="width: 10%;"><input type="text" class="grid-input" placeholder=""></td>
+                <td style="width: 10%;"><input type="text" class="grid-input" placeholder=""></td>
+                <td style="width: 10%;"><input type="text" class="grid-input" placeholder=""></td>
+            `;
+            tbody.appendChild(tr);
+        }
+    }
+
+    window.addEventListener('beforeprint', function() {
+        const adSoyad = document.getElementById('inputAdSoyad');
+        const gorev = document.getElementById('inputGorev');
+        if (!adSoyad.value) adSoyad.dataset.tempPlaceholder = adSoyad.placeholder, adSoyad.placeholder = '';
+        if (!gorev.value) gorev.dataset.tempPlaceholder = gorev.placeholder, gorev.placeholder = '';
+    });
+
+    window.addEventListener('afterprint', function() {
+        const adSoyad = document.getElementById('inputAdSoyad');
+        const gorev = document.getElementById('inputGorev');
+        if (adSoyad.dataset.tempPlaceholder) adSoyad.placeholder = adSoyad.dataset.tempPlaceholder;
+        if (gorev.dataset.tempPlaceholder) gorev.placeholder = gorev.dataset.tempPlaceholder;
+    });
+
+    generateTable();
+</script>
+
+</body>
+</html>
